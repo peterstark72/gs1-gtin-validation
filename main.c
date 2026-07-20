@@ -2,16 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gtin.h"
+#include "gcp.h"
 
 static void process(const char *s)
 {
     GTIN gt;
-    int err = GTIN_Parse(&gt, s);
-    if (err != GTIN_OK) {
-        printf("%s\t%s\n", s, GTIN_Error(err));
-        return;
+    GtinError err = GTIN_Init(&gt, s);
+    printf("%s\t%s", GTIN_Error(err), s);
+    if (err == GTIN_OK) 
+    {
+        printf("\t%s\t%s\t%s\t%s\n", gt.digits, GTIN_Range(gt.range), GTIN_Format(gt.format), GTIN_CompanyPrefix(&gt));
+    } else 
+    {
+        printf("\n");
     }
-    printf("%s\t%d\t%s\n", gt.digits, gt.length, gt.prefix);
 }
 
 int main(int argc, char *argv[])
