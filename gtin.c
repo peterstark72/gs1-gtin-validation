@@ -13,16 +13,7 @@ struct prefix {
 };
 
 
-/*
-GS1-8 Prefixes Significance
-000 – 099 Used to issue Restricted Circulation Numbers within a company (company defined)
-100 – 199 Used to issue GTIN-8s
-200 – 299 Used to issue Restricted Circulation Numbers within a company (company defined)
-300 – 951 Used to issue GTIN-8s
-952 Used for demonstrations and examples of the GS1 system
-953 – 976 Used to issue GTIN-8s
-977 – 999 Reserved for future use
-*/
+// GTIN-8 Prefix ranges and their corresponding GTIN range codes
 const struct prefix gs1_8_prefix[] = {
     {0, 99, GTIN_PREFIX_RESTRICTED_CIRCULATION},
     {100, 199, GTIN_PREFIX_GTIN_8},
@@ -33,15 +24,7 @@ const struct prefix gs1_8_prefix[] = {
     {977, 999, GTIN_PREFIX_RESERVED},
 };
 
-/*
-GS1 Prefix range U.P.C. Prefix range Significance
-    1XXX       Used to issue U.P.C. Company Prefixes, reserved for alignment with FDA Labeler Code
-    2XXX       Used to issue Restricted Circulation Numbers within a geographic region
-    3XXX       Used to issue U.P.C. Company Prefixes, reserved for alignment with FDA Labeler Code
-    4XXX       Used to issue Restricted Circulation Numbers within a company
-    5XXX       Reserved for future use
-    6XXX – 9XXX   Used to issue U.P.C. Company Prefixes
-*/
+// UPC Prefix ranges and their corresponding GTIN range codes
 const struct prefix upc_prefix[] = {
     {1, 1999, GTIN_PREFIX_UPC},
     {2000, 2999, GTIN_PREFIX_RESTRICTED_CIRCULATION},
@@ -52,7 +35,7 @@ const struct prefix upc_prefix[] = {
 };
 
 
-// GS1 Prefix
+// GS1 Prefix ranges and their corresponding GTIN range codes
 const struct prefix gs1_prefix[] = {    
     {100, 199, GTIN_PREFIX_GS1_COMPANY},
     {200, 299, GTIN_PREFIX_RESTRICTED_CIRCULATION},
@@ -69,6 +52,7 @@ const struct prefix gs1_prefix[] = {
 };
 
 
+// Returns 1 if the string starts with the specified prefix, otherwise returns 0
 static int starts_with(const char *str, const char *prefix) {
     while (*prefix) {
         if (*prefix++ != *str++) {
@@ -103,26 +87,7 @@ static int is_valid_gtin_format(int length) {
 static int is_gtin_digit(char c) {
     return c >= '0' && c <= '9';
 }
-
-
-// Returns 1 if the check digit is valid, 0 otherwise
-// https://www.gs1.org/services/how-calculate-check-digit-manually
-static int is_valid_checkdigit(const char *s, int length)
-{
-    // Should be a valid GTIN length (8, 12, 13, or 14)
-    assert(is_valid_gtin_format(length));
-
-    int sum = 0;
-    int weight = (GTIN_MAX_LENGTH - length) % 2 == 0 ? 3 : 1; // Start with weight 3 for even lengths, 1 for odd lengths
-    for (int i = 0; i < length - 1; i++)
-    {
-        int digit = s[i] - '0';
-        sum += digit * weight;
-        weight = (weight == 3) ? 1 : 3; // Alternate weights
-    }
-    int check_digit = (10 - (sum % 10)) % 10;
-    return check_digit == (s[length - 1] - '0');
-}    
+ 
 
 // Cast the string to an integer, returning the integer value of the first n characters
 int dtio(const char *src, int n) {
@@ -156,27 +121,6 @@ static int lookup_range(int prefix, const struct prefix *prefix_array, size_t ar
 }
 
 
-// Fill the GS1-8 Prefix or GS1 Company Prefix prefix based on format
-static void fill_prefix(GTIN *gt) {
-    switch (gt->format) {
-        case GTIN_8_FORMAT:
-            sublcpy(gt->prefix, gt->digits, 6, 3); // GTIN-8 prefix is the first 3 digits
-            break;
-        case GTIN_12_FORMAT:
-            sublcpy(gt->prefix, gt->digits, 2, 6); // GS1 Company Prefix is the first 6 digits for GTIN-12
-            break;
-        case GTIN_13_FORMAT:
-            sublcpy(gt->prefix, gt->digits, 1, 8); // GS1 Company Prefix is the first 8 digits for GTIN-13
-            break;
-        case GTIN_14_FORMAT:
-            sublcpy(gt->prefix, gt->digits, 1, 8); // GS1 Company Prefix is the first 8 digits for GTIN-14
-            break;
-        default:
-            gt->prefix[0] = '\0'; // Unknown format, set prefix to empty string
-            return;
-    }
-}
-
 static GtinRange determine_range(const char *prefix, GtinFormat format) {
     int prefix_value;
     switch (format) {
@@ -196,15 +140,41 @@ static GtinRange determine_range(const char *prefix, GtinFormat format) {
 }
 
 
-
-// Returns a zero-padded 14-character string representation of the GTIN, or NULL if the GTIN is invalid
-char* GTIN_String(GTIN *gt) {
-    if (gt == NULL || !is_valid_gtin_format(gt->format)) {
-        return NULL; // Return NULL if the GTIN is invalid
+// Calculates the check digit for a GTIN string of a given length
+// https://www.gs1.org/services/how-calculate-check-digit-manually
+char GTIN_CalculateCheckDigit(const char *s, int length_without_check_digit) {
+    int sum = 0;
+    int weight = (length_without_check_digit% 2 == 0) ? 1 : 3; // Start with weight 3 for even lengths, 1 for odd lengths
+    for (int i = 0; i < length_without_check_digit; i++)
+    {
+        int digit = s[i] - '0';
+        sum += digit * weight;
+        weight = (weight == 3) ? 1 : 3; // Alternate weights
     }
-    static char gtin_string[GTIN_MAX_LENGTH + 1]; // +1 for null terminator
-    zerofill(gtin_string, gt->digits, strlen(gt->digits), GTIN_MAX_LENGTH);
-    return gtin_string;
+    int check_digit = (10 - (sum % 10)) % 10;
+    return '0' + check_digit; // Return as character
+}
+
+// Copies the prefix from the GTIN digits into the provided prefix buffer based on the GTIN format
+void GTIN_CopyPrefix(char *prefix, const gtin14 digits, GtinFormat format) {
+    switch (format) {
+        case GTIN_8_FORMAT:
+            sublcpy(prefix, digits, 6, 3); // GTIN-8 prefix is the first 3 digits
+            break;
+        case GTIN_12_FORMAT:
+            sublcpy(prefix, digits, 2, 6); // GS1 Company Prefix is the first 6 digits for GTIN-12
+            break;
+        case GTIN_13_FORMAT:
+            sublcpy(prefix, digits, 1, 8); // GS1 Company Prefix is the first 7 digits for GTIN-13
+            break;
+        case GTIN_14_FORMAT:
+            sublcpy(prefix, digits, 1, 8); // GS1 Company Prefix is the first 8 digits for GTIN-14
+            break;
+        default:
+            *prefix = '\0'; // Unknown format, set prefix to empty string
+            return;
+    }
+    return; 
 }
 
 
@@ -234,7 +204,7 @@ GtinError GTIN_Init(GTIN *gt, const char *s) {
     zerofill(gt->digits, s, length, GTIN_MAX_LENGTH); // Zero-fill to 14 characters
     
     // Determine the GTIN format based on the length and leading zeros
-    if (length == (GtinFormat) GTIN_14_FORMAT) {
+    if (length == GTIN_MAX_LENGTH) {
         if (starts_with(gt->digits, "000000")) {
             // Six consecutive leading zeros indicate a GTIN-8 format
             gt->format = GTIN_8_FORMAT; 
@@ -254,11 +224,13 @@ GtinError GTIN_Init(GTIN *gt, const char *s) {
 
 
     // Check the validity of the check digit
-    if (!is_valid_checkdigit(s, length)) {
+    int cd = GTIN_CalculateCheckDigit(s, length - 1); 
+    if (cd != s[length - 1]) {
         return GTIN_ERR_BAD_CHECKSUM; // Invalid check digit
     }
+    gt->check_digit = cd;
 
-    fill_prefix(gt); // Fill the prefix field based on the GTIN format
+    GTIN_CopyPrefix(gt->prefix, gt->digits, gt->format); // Copy the prefix based on the format
 
     gt->range = determine_range(gt->prefix, gt->format); // Determine the range based on the prefix and format
 

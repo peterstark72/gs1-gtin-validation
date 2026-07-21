@@ -37,14 +37,22 @@ typedef enum  {
     GTIN_PREFIX_UPC,
 } GtinRange;
 
-    
+typedef char gtin14[GTIN_MAX_LENGTH + 1]; // Type for GTIN digits (string)
+
 // Define the GTIN type as a struct containing a character array (string)
 typedef struct   {
-    char            digits[GTIN_MAX_LENGTH + 1];
-    char            prefix[GTIN_MAX_PREFIX_LENGTH + 1];
-    GtinFormat      format; 
-    GtinRange       range;
+    gtin14          digits; // GTIN digits (14) as a string, zero-padded if necessary
+    char            prefix[GTIN_MAX_PREFIX_LENGTH + 1]; // GTIN prefix (up to 8 characters)
+    char            check_digit; // GTIN check digit
+    GtinFormat      format; // GTIN format (8, 12, 13, 14)
+    GtinRange       range; // GTIN range based on the prefix
 } GTIN;
+
+// Calculates the check digit for a GTIN string of the specified length (excluding the check digit)
+char GTIN_CalculateCheckDigit(const char *s, int length_without_check_digit);
+
+// Copies the prefix from the GTIN digits into the provided prefix buffer based on the GTIN format
+void GTIN_CopyPrefix(char *prefix, const gtin14 digits, GtinFormat format);
 
 // Creates a GTIN string from the provided input string
 GtinError GTIN_Init(GTIN *gt, const char *s);
@@ -52,14 +60,12 @@ GtinError GTIN_Init(GTIN *gt, const char *s);
 // Returns a string representation of the error code
 char* GTIN_Error(GtinError err);
 
-// Returns a zero-padded 14-character string representation of the GTIN, or NULL if the GTIN is invalid
-char* GTIN_String(GTIN *gt);
-
 // Returns a string representation of the range code
 char* GTIN_Range(GtinRange range);
 
 // Returns a string representation of the format code
 char* GTIN_Format(GtinFormat fmt);
+
 
 
 #endif // GTIN_H

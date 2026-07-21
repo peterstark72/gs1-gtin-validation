@@ -43,10 +43,30 @@ static void run_data_file_tests(const char *path)
     fclose(fp);
 }
 
+void Test_GTIN_CalculateCheckDigit() {
+    assert(GTIN_CalculateCheckDigit("39702530829", 11) == '8');
+}
+
+void Test_GTIN_CopyPrefix() {
+    char prefix[GTIN_MAX_PREFIX_LENGTH + 1];
+
+    GTIN_CopyPrefix(prefix, "03662515084851", GTIN_13_FORMAT);
+    assert(strcmp(prefix, "36625150") == 0);
+
+    GTIN_CopyPrefix(prefix, "00000097689355", GTIN_8_FORMAT);
+    assert(strcmp(prefix, "976") == 0);
+
+
+}
+
 int main(void)
 {
     run_data_file_tests("./data/gtin8_samples.txt");
     run_data_file_tests("./data/gtin12_samples.txt");
     run_data_file_tests("./data/gtin_invalid_samples.txt");
+    
+    Test_GTIN_CalculateCheckDigit();
+    
+    Test_GTIN_CopyPrefix();
     return 0;
 }
