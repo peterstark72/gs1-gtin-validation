@@ -5,6 +5,19 @@ This repository provides a C99 implementation for validating GS1 GTINs (Global T
 The GS1 GTIN (Global Trade Item Number) is a unique identifier for trade items, developed by 
 GS1. The general specification for GTINs can be found in the GS1 General Specifications document, which is available at [GS1 General Specifications](https://www.gs1.org/standards/barcodes-epcrfid-id-keys/gs1-general-specifications).
 
+## The GTIN CLI
+
+The GTIN CLI is a command-line interface tool that allows users to validate GTINs directly from the terminal.
+
+```bash
+Usage: gtin [OPTIONS] <GTIN>
+Options:
+  -h, --help            Show this help message and exit
+  -v, --verbose         Show detailed output (default: show GTIN only)
+  -s, --skip-invalid    Skip invalid GTINs and continue processing
+  -                     Read GTINs from standard input (stdin)
+```
+
 ## GTIN Formats
 
 Here are the different GTIN formats:
