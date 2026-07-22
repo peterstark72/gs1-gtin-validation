@@ -28,26 +28,8 @@ static void process(const char *s)
     }
 }
 
-
-void process_flags(int argc, char *argv[])
+void read_stdin()
 {
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--skip-invalid") == 0) {
-            skip_invalid = TRUE;
-        } else if (strcmp(argv[i], "--verbose") == 0) {
-            verbose = TRUE;
-        } else {
-            process(argv[i]);
-        }
-    }
-}
-
-int main(int argc, char *argv[])
-{
-    if (argc >= 2) {
-        process_flags(argc, argv);
-    }
-
     char line[64];
     while (fgets(line, sizeof(line), stdin) != NULL) {
         line[strcspn(line, "\r\n")] = '\0'; // strip trailing newline
@@ -56,6 +38,40 @@ int main(int argc, char *argv[])
         }
         process(line);
     }
+}
 
+
+void process_flags(int argc, char *argv[])
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--skip-invalid") == 0) {
+            skip_invalid = TRUE;
+        } else if (strcmp(argv[i], "--verbose") == 0) {
+            verbose = TRUE;
+        } else if (strcmp(argv[i], "-") == 0) {
+            read_stdin();
+        } else if (strcmp(argv[i], "--help") == 0) {
+            printf("Usage: %s [--skip-invalid] [--verbose] [GTINs...]\n", argv[0]);
+            printf("Options:\n");
+            printf("  --skip-invalid   Skip invalid GTINs (default: show error)\n");
+            printf("  --verbose        Show detailed output (default: show GTIN only)\n");
+            printf("  -                Read GTINs from standard input\n");
+            printf("  --help           Show this help message\n");
+            exit(0);
+        } else {
+            process(argv[i]);
+        }
+    }
+}
+
+
+int main(int argc, char *argv[])
+{
+    if (argc >= 2) {
+        process_flags(argc, argv);
+        return 0;
+    }
+
+    read_stdin();    
     return 0;
 }
