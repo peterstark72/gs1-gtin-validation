@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "gtin.h"
-#include "gcp.h"
 
 #define MAX_LINE_LENGTH 256
 #define MAX_COLUMNS 2
@@ -34,9 +34,9 @@ static void run_data_file_tests(const char *path)
         GTIN gt;
         GtinError err = GTIN_Init(&gt, columns[0]);
         if (err == GTIN_OK) {
-            assert(strcmp(GTIN_Range(gt.range), columns[1]) == 0);
+            assert(strcmp(GTIN_PrefixStr(gt.prefix), columns[1]) == 0);
         } else {
-            assert(strcmp(GTIN_Error(err), columns[1]) == 0);
+            assert(strcmp(GTIN_ErrorStr(err), columns[1]) == 0);
         }        
     }
 
@@ -47,26 +47,16 @@ void Test_GTIN_CalculateCheckDigit() {
     assert(GTIN_CalculateCheckDigit("39702530829", 11) == '8');
 }
 
-void Test_GTIN_CopyPrefix() {
-    char prefix[GTIN_MAX_PREFIX_LENGTH + 1];
 
-    GTIN_CopyPrefix(prefix, "03662515084851", GTIN_13_FORMAT);
-    assert(strcmp(prefix, "36625150") == 0);
-
-    GTIN_CopyPrefix(prefix, "00000097689355", GTIN_8_FORMAT);
-    assert(strcmp(prefix, "976") == 0);
-
-
-}
 
 int main(void)
 {
     run_data_file_tests("./data/gtin8_samples.txt");
     run_data_file_tests("./data/gtin12_samples.txt");
+    run_data_file_tests("./data/gtin13_samples.txt");
     run_data_file_tests("./data/gtin_invalid_samples.txt");
     
     Test_GTIN_CalculateCheckDigit();
-    
-    Test_GTIN_CopyPrefix();
+
     return 0;
 }

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gtin.h"
-#include "gcp.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -19,13 +18,13 @@ static void process(const char *s)
     {
         if (verbose == TRUE) {
             GTIN_Print(&gt); 
-            printf("\tPrefix: %s\tCheck Digit: %c\tFormat: %s\tRange: %s\tCompany Prefix: %s\n", 
-                gt.prefix, gt.check_digit, GTIN_Format(gt.format), GTIN_Range(gt.range), GTIN_CompanyPrefix(&gt));
+            printf("\t%s\t%c\t%s\t%s\n", 
+                gt.prefix_digits, gt.check_digit, GTIN_FormatStr(gt.format), GTIN_PrefixStr(gt.prefix));
         } else {
             GTIN_Print(&gt); printf("\n");
         }
     } else if (skip_invalid == FALSE) {
-        printf("%s\t%s\n", s, GTIN_Error(err));
+        printf("%s\t%s\n", s, GTIN_ErrorStr(err));
     }
 }
 
@@ -47,7 +46,6 @@ int main(int argc, char *argv[])
 {
     if (argc >= 2) {
         process_flags(argc, argv);
-        return 0;
     }
 
     char line[64];

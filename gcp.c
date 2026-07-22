@@ -293,8 +293,6 @@ char* GTIN_CompanyPrefix(GTIN* gt) {
     char gcp_string[4]; // 3 digits + null terminator
     strlcpy(gcp_string, gt->prefix, 4);
 
-    printf("GCP String: %s\n", gcp_string); // Debugging line
-
     int gcp_range = strtol(gcp_string, NULL, 10);
     GtinCompanyPrefixRange company_prefix_range = lookup_company_prefix(gcp_range);
     return GTIN_CompanyPrefixToString(company_prefix_range);
