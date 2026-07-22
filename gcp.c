@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "gcp.h"
 #include "gtin.h"
 
@@ -281,14 +283,19 @@ char* GTIN_CompanyPrefixToString(GtinCompanyPrefixRange range) {
 }
 
 
-char* GTIN_CompanyPrefix(GTIN* gt) {
-    unsigned int prefix;
+
+char* GTIN_CompanyPrefix(GTIN* gt) {    
 
     if (gt->range != GTIN_PREFIX_GS1_COMPANY) {
         return NULL;
     }
 
-    prefix = strtol(gt->prefix, NULL, 10);
-    GtinCompanyPrefixRange company_prefix_range = lookup_company_prefix(prefix);
+    char gcp_string[4]; // 3 digits + null terminator
+    strlcpy(gcp_string, gt->prefix, 4);
+
+    printf("GCP String: %s\n", gcp_string); // Debugging line
+
+    int gcp_range = strtol(gcp_string, NULL, 10);
+    GtinCompanyPrefixRange company_prefix_range = lookup_company_prefix(gcp_range);
     return GTIN_CompanyPrefixToString(company_prefix_range);
 }

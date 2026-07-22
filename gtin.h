@@ -66,7 +66,8 @@ char* GTIN_Range(GtinRange range);
 // Returns a string representation of the format code
 char* GTIN_Format(GtinFormat fmt);
 
-
+// Prints the GTIN information to stdout
+void GTIN_Print(const GTIN *gt);
 
 #endif // GTIN_H
 

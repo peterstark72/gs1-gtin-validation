@@ -4,24 +4,49 @@
 #include "gtin.h"
 #include "gcp.h"
 
+#define TRUE 1
+#define FALSE 0
+
+// Flags
+int skip_invalid = FALSE; // Skip invalid GTINs
+int verbose = FALSE; // Verbose output
+
 static void process(const char *s)
 {
     GTIN gt;
     GtinError err = GTIN_Init(&gt, s);
-    printf("%s\t%s", GTIN_Error(err), s);
     if (err == GTIN_OK) 
     {
-        printf("\t%s\t%s\t%s\t%s\n", gt.digits, GTIN_Range(gt.range), GTIN_Format(gt.format), GTIN_CompanyPrefix(&gt));
-    } else 
-    {
-        printf("\n");
+        if (verbose == TRUE) {
+            GTIN_Print(&gt); 
+            printf("\tPrefix: %s\tCheck Digit: %c\tFormat: %s\tRange: %s\tCompany Prefix: %s\n", 
+                gt.prefix, gt.check_digit, GTIN_Format(gt.format), GTIN_Range(gt.range), GTIN_CompanyPrefix(&gt));
+        } else {
+            GTIN_Print(&gt); printf("\n");
+        }
+    } else if (skip_invalid == FALSE) {
+        printf("%s\t%s\n", s, GTIN_Error(err));
+    }
+}
+
+
+void process_flags(int argc, char *argv[])
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--skip-invalid") == 0) {
+            skip_invalid = TRUE;
+        } else if (strcmp(argv[i], "--verbose") == 0) {
+            verbose = TRUE;
+        } else {
+            process(argv[i]);
+        }
     }
 }
 
 int main(int argc, char *argv[])
 {
     if (argc >= 2) {
-        process(argv[1]);
+        process_flags(argc, argv);
         return 0;
     }
 

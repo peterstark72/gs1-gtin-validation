@@ -177,6 +177,43 @@ void GTIN_CopyPrefix(char *prefix, const gtin14 digits, GtinFormat format) {
     return; 
 }
 
+void GTIN_Print(const GTIN *gt) {
+    char *ptr = (char*) gt->digits;
+    switch (gt->format) {
+        case GTIN_8_FORMAT:
+            ptr += 6; // Skip the leading zeros for GTIN-8
+            printf("%c%c%c%c %c%c%c%c", 
+                ptr[0], ptr[1], ptr[2], ptr[3], 
+                ptr[4], ptr[5], ptr[6], ptr[7]);
+            break;
+        case GTIN_12_FORMAT:
+            ptr += 2; // Skip the leading zeros for GTIN-12
+            printf("%c%c%c%c%c%c %c%c%c%c%c%c", 
+                ptr[0], ptr[1], ptr[2], ptr[3], 
+                ptr[4], ptr[5], ptr[6], ptr[7], 
+                ptr[8], ptr[9], ptr[10], ptr[11]);
+            break;
+        case GTIN_13_FORMAT: 
+            ptr += 1; // Skip the leading zero for GTIN-13
+            printf("%c %c%c%c%c%c%c %c%c%c%c%c%c", 
+                ptr[0], ptr[1], ptr[2], ptr[3], 
+                ptr[4], ptr[5], ptr[6], ptr[7], 
+                ptr[8], ptr[9], ptr[10], ptr[11], 
+                ptr[12]);
+            break;
+        case GTIN_14_FORMAT:
+            printf("%c %c%c%c%c %c%c%c%c %c%c%c%c %c",
+                ptr[0], ptr[1], ptr[2], ptr[3],
+                ptr[4], ptr[5], ptr[6], ptr[7],
+                ptr[8], ptr[9], ptr[10], ptr[11],
+                ptr[12], ptr[13]);
+            break;
+        default:
+            printf("Unknown GTIN format\n");
+            break;
+    }
+}
+
 
 // Creates a new GTIN object from the provided string, validating its format and check digit
 GtinError GTIN_Init(GTIN *gt, const char *s) {
