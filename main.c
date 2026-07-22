@@ -18,7 +18,7 @@ static void process(const char *s)
     {
         if (verbose == TRUE) {
             GTIN_Print(&gt); 
-            printf("\t%s\t%c\t%s\t%s\n", 
+            printf(",%s,%c,%s,%s\n", 
                 gt.prefix_digits, gt.check_digit, GTIN_FormatStr(gt.format), GTIN_PrefixStr(gt.prefix));
         } else {
             GTIN_Print(&gt); printf("\n");
